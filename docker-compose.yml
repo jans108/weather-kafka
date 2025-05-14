@@ -1,4 +1,18 @@
 services:
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/python:3.11
+    container_name: devcontainer
+    restart: unless-stopped
+    volumes:
+      - ..:/workspaces/weather-kafka:cached
+      - ~/.gitconfig:/home/vscode/.gitconfig:ro
+    command: sleep infinity
+    networks:
+      - kafka-network
+      - db-network
+    user: vscode
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
   kafka:
     image: bitnami/kafka:latest
     restart: unless-stopped
@@ -46,8 +60,8 @@ services:
       - db-network
   producer:
     build:
-      context: ./producer
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: producer/Dockerfile
     depends_on:
       kafka:
         condition: service_healthy
@@ -60,8 +74,8 @@ services:
       - kafka-network
   consumer:
     build:
-      context: ./consumer
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: consumer/Dockerfile
     depends_on:
       kafka:
         condition: service_healthy

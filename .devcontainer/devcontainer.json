@@ -1,0 +1,27 @@
+{
+	"name": "Weather Kafka Development",
+	"dockerComposeFile": "../docker-compose.yml",
+	"service": "devcontainer",
+	"workspaceFolder": "/workspaces/weather-kafka/weather-kafka",
+	"remoteUser": "vscode",
+	"postCreateCommand": "echo 'Setting up development environment...' && pip install -r /workspaces/weather-kafka/weather-kafka/requirements.txt && if [ -f '/workspaces/weather-kafka/weather-kafka/producer/requirements.txt' ]; then pip install -r /workspaces/weather-kafka/weather-kafka/producer/requirements.txt; fi && if [ -f '/workspaces/weather-kafka/weather-kafka/consumer/requirements.txt' ]; then pip install -r /workspaces/weather-kafka/weather-kafka/consumer/requirements.txt; fi && echo 'Setup complete!'",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-azuretools.vscode-docker"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.linting.enabled": true,
+				"terminal.integrated.defaultProfile.linux": "bash"
+			}
+		}
+	},
+	"forwardPorts": [
+		9092,
+		3307
+	],
+	"shutdownAction": "none"
+}
