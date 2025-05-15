@@ -4,9 +4,11 @@ import pandas as pd
 import json
 import time
 import logging
+import pytz
 from retry_requests import retry
 from datetime import datetime
 from kafka import KafkaProducer
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO,
@@ -32,7 +34,7 @@ params = {
 def create_kafka_producer():
     try:
         producer = KafkaProducer(
-            bootstrap_servers='localhost:9092',
+            bootstrap_servers='kafka:9092',
             value_serializer=lambda v: json.dumps(v).encode('utf-8'),
             acks='all'
         )
@@ -45,6 +47,10 @@ def create_kafka_producer():
 
 # Fetch weather data from Open-Meteo API
 def fetch_data():
+    current_time = datetime.now(pytz.UTC)
+    local_tz = pytz.timezone('Europe/Berlin')
+    local_time = current_time.astimezone(local_tz)
+
     responses = openmeteo.weather_api(url, params=params)
     response = responses[0]
     current = response.Current()
@@ -55,12 +61,13 @@ def fetch_data():
         "surface_pressure": current.Variables(3).Value(),
         "wind_speed": current.Variables(4).Value(),
         "wind_direction": current.Variables(5).Value(),
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        "timestamp": local_time.strftime('%Y-%m-%d %H:%M:%S')
     }
     return current_data
 
-
 # Send the data to Kafka
+
+
 def send_to_kafka(producer: KafkaProducer, topic_name, data):
     try:
         future = producer.send(topic_name, value=data)
@@ -71,7 +78,7 @@ def send_to_kafka(producer: KafkaProducer, topic_name, data):
         raise
 
 
-def run_weather_stream(interval=600, topic_name='weather_data'):
+def run_weather_stream(interval=60, topic_name='weather_data'):
     producer = create_kafka_producer()
 
     try:
@@ -99,4 +106,4 @@ def run_weather_stream(interval=600, topic_name='weather_data'):
 
 if __name__ == "__main__":
     # Run the weather data streaming
-    run_weather_stream(interval=600, topic_name='weather_data')
+    run_weather_stream(interval=60, topic_name='weather_data')
